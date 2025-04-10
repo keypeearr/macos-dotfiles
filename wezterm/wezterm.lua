@@ -16,7 +16,8 @@ config.webgpu_preferred_adapter = gpus[1]
 config.front_end = "WebGpu"
 
 -- For example, changing the color scheme:
-config.color_scheme = "Hopscotch.256"
+config.color_scheme = "Black Metal (Burzum) (base16)"
+-- config.color_scheme = 'Hopscotch.256'
 config.font = wezterm.font("JetBrains Mono")
 config.font_size = 20
 
