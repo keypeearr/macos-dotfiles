@@ -2,10 +2,36 @@
 
 # make sure it's executable with:
 # chmod +x ~/.config/sketchybar/plugins/aerospace.sh
-source "$CONFIG_DIR/plugins/colors.sh"
+source "$CONFIG_DIR/colors.sh"
 
-if [ "$1" = "$FOCUSED_WORKSPACE" ]; then
-  sketchybar --set $NAME background.color=$HIGHLIGHT_BACKGROUND label.color=$TEXT_WHITE icon.color=$TEXT_WHITE background.border_color=$TEXT_WHITE
+# Handle mouse events
+if [ "$SENDER" = "mouse.entered" ]; then
+  sketchybar --set $NAME background.color=$WORKSPACE_HOVER_BG \
+                           label.color=$HOVER_TEXT \
+                           icon.color=$HOVER_TEXT
+  exit 0
+elif [ "$SENDER" = "mouse.exited" ]; then
+  # Restore normal state - run the normal logic below
+  :
+fi
+
+# Get the current focused workspace
+CURRENT_WORKSPACE=$(aerospace list-workspaces --focused)
+
+if [ "$1" = "$CURRENT_WORKSPACE" ]; then
+  # Active workspace - workspace number + dotted circle
+  sketchybar --set $NAME icon="$1" \
+                           label="◉" \
+                           background.color=$WORKSPACE_ACTIVE_BG \
+                           background.drawing=on \
+                           label.color=$WORKSPACE_ACTIVE_TEXT \
+                           icon.color=$WORKSPACE_ACTIVE_TEXT
 else
-  sketchybar --set $NAME background.color=$TRANSPARENT label.color=$TEXT_WHITE icon.color=$TEXT_WHITE background.border_color=$TEXT_WHITE
+  # Inactive workspace - workspace number + empty circle
+  sketchybar --set $NAME icon="$1" \
+                           label="○" \
+                           background.color=$WORKSPACE_INACTIVE_BG \
+                           background.drawing=on \
+                           label.color=$WORKSPACE_INACTIVE_TEXT \
+                           icon.color=$WORKSPACE_INACTIVE_TEXT
 fi
