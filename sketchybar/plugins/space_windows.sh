@@ -1,41 +1,25 @@
 #!/bin/bash
 
+# Optimized script - minimal workspace visibility management
 source "$CONFIG_DIR/colors.sh"
 
-# Get current focused workspace
-CURRENT_WORKSPACE=$(aerospace list-workspaces --focused)
-
-# Hide all empty workspaces
-for sid in $(aerospace list-workspaces --monitor 1 --empty ); do
-    sketchybar --set space.$sid label="" drawing=off
-done
-
-# Show workspaces with applications and update their styling
-for sid in $(aerospace list-workspaces --monitor 1 --empty no); do
-    apps=$(aerospace list-windows --workspace "$sid" | awk -F'|' '{gsub(/^ *| *$/, "", $2); print $2}')
-    sketchybar --set space.$sid drawing=on
-
-    # Apply styling based on whether this is the focused workspace
-    if [ "$sid" = "$CURRENT_WORKSPACE" ]; then
-        # Active workspace - workspace number + dotted circle
-        sketchybar --set space.$sid icon="$sid" \
-                                    label="◉" \
-                                    background.color=$WORKSPACE_ACTIVE_BG \
-                                    background.drawing=on \
-                                    label.color=$WORKSPACE_ACTIVE_TEXT \
-                                    icon.color=$WORKSPACE_ACTIVE_TEXT
-    else
-        # Inactive workspace - workspace number + empty circle
-        sketchybar --set space.$sid icon="$sid" \
-                                    label="○" \
-                                    background.color=$WORKSPACE_INACTIVE_BG \
-                                    background.drawing=on \
-                                    label.color=$WORKSPACE_INACTIVE_TEXT \
-                                    icon.color=$WORKSPACE_INACTIVE_TEXT
+# Only run workspace visibility updates, not styling (handled by aerospace_workspace_change.sh)
+if [ "$SENDER" = "aerospace_workspace_change" ] || [ "$SENDER" = "space_windows_change" ]; then
+    # Get workspaces in one call and batch updates
+    COMMANDS=()
+    
+    # Hide empty workspaces
+    for sid in $(aerospace list-workspaces --monitor 1 --empty); do
+        COMMANDS+=(--set space.$sid drawing=off)
+    done
+    
+    # Show non-empty workspaces  
+    for sid in $(aerospace list-workspaces --monitor 1 --empty no); do
+        COMMANDS+=(--set space.$sid drawing=on)
+    done
+    
+    # Execute all visibility changes in one call
+    if [[ ${#COMMANDS[@]} -gt 0 ]]; then
+        sketchybar "${COMMANDS[@]}"
     fi
-done
-
-# Ensure focused workspace is always visible
-if [ "$SENDER" == "aerospace_workspace_change" ]; then
-  sketchybar --set space.$CURRENT_WORKSPACE drawing=on
 fi

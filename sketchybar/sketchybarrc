@@ -47,17 +47,14 @@ sketchybar --default "${default[@]}"
 ##### Adding AeroSpace Workspace Indicators #####
 # Adding AeroSpace workspaces
 
-# Add the aerospace_workspace_change event
+# Add aerospace event
 sketchybar --add event aerospace_workspace_change
 
-WORKSPACE_NAMES=(1 2 3 4 5 6 7 8 9 10)
-
-# This only works for single monitor configs!
-for sid in $(aerospace list-workspaces --monitor 1); do
+# Create workspace indicators only for workspaces with apps
+for sid in $(aerospace list-workspaces --monitor 1 --empty no); do
   sketchybar --add item space.$sid left \
-    --subscribe space.$sid aerospace_workspace_change \
     --set space.$sid \
-    drawing=off \
+    drawing=on \
     background.corner_radius=6 \
     background.drawing=on \
     background.height=26 \
@@ -73,52 +70,30 @@ for sid in $(aerospace list-workspaces --monitor 1); do
     label.color=$WORKSPACE_INACTIVE_TEXT \
     label.padding_right=8 \
     label.padding_left=4 \
-    label.y_offset=0 \
     background.color=$WORKSPACE_INACTIVE_BG \
     background.border_width=0 \
     click_script="aerospace workspace $sid" \
     script="$CONFIG_DIR/plugins/aerospace.sh $sid" \
-    --subscribe space.$sid mouse.entered \
-    --subscribe space.$sid mouse.exited
+    --subscribe space.$sid mouse.entered mouse.exited
 done
 
-# Load Icons on startup
-for sid in $(aerospace list-workspaces --monitor 1 --empty no); do
-  apps=$(aerospace list-windows --workspace "$sid" | awk -F'|' '{gsub(/^ *| *$/, "", $2); print $2}')
+# Centralized workspace change handler
+sketchybar --add item workspace_handler left \
+  --set workspace_handler \
+  drawing=off \
+  script="$PLUGIN_DIR/aerospace_workspace_change.sh" \
+  --subscribe workspace_handler aerospace_workspace_change
 
-  sketchybar --set space.$sid drawing=on
-
-  icon_strip=" "
-  if [ "${apps}" != "" ]; then
-    while read -r app; do
-      icon_strip+=" $($CONFIG_DIR/plugins/icon_map_fn.sh "$app")"
-    done <<<"${apps}"
-  else
-    icon_strip=""
-  fi
-  sketchybar --set space.$sid label="$icon_strip"
-done
-
-sketchybar --add item space_separator left \
-  --set space_separator icon="" \
-  icon.padding_left=8 \
-  icon.padding_right=0 \
-  icon.margin_right=0 \
-  label.drawing=off \
-  label.padding_left=0 \
-  label.margin_left=0 \
-  background.drawing=off \
-  script="$PLUGIN_DIR/space_windows.sh" \
-  --subscribe space_separator aerospace_workspace_change space_windows_change front_app_switched
-
+# Front app display
 sketchybar --add item front_app left \
-           --set front_app icon.drawing=on \
+           --set front_app \
+           icon.drawing=on \
            background.padding_left=4 \
            background.padding_right=8 \
            label.color=$ORANGE \
            label.font="JetBrainsMono Nerd Font:Medium:14.0" \
            script="$PLUGIN_DIR/aerospace_front_app.sh" \
-           --subscribe front_app aerospace_focus_change
+           --subscribe front_app aerospace_workspace_change
 
 ##### Adding Center Items #####
 sketchybar --add item clock center \
