@@ -5,9 +5,10 @@ source "$CONFIG_DIR/colors.sh"
 # Dynamic workspace management script
 # This script manages workspace visibility based on app presence
 
-# Get list of workspaces with apps
-OCCUPIED_WORKSPACES=$(aerospace list-workspaces --monitor 1 --empty no)
-FOCUSED_WORKSPACE=$(aerospace list-workspaces --focused)
+# Get list of workspaces with apps - batched aerospace calls for efficiency
+WORKSPACE_INFO=$(aerospace list-workspaces --monitor 1 --empty no; echo "---"; aerospace list-workspaces --focused)
+OCCUPIED_WORKSPACES=$(echo "$WORKSPACE_INFO" | sed '/^---$/q' | head -n -1)
+FOCUSED_WORKSPACE=$(echo "$WORKSPACE_INFO" | sed -n '/^---$/,$p' | tail -n +2)
 
 # Array to track which workspaces should be visible
 declare -a visible_workspaces=()
