@@ -12,14 +12,15 @@ PLUGIN_DIR="$CONFIG_DIR/plugins" # Directory where all the plugin scripts are st
 
 ##### Bar Appearance #####
 sketchybar --bar height=38 \
-           blur_radius=30 \
+           blur_radius=15 \
            position=top \
            sticky=off \
            padding_left=8 \
            padding_right=8 \
            color=0x00000000 \
            corner_radius=12 \
-           margin=8
+           margin=8 \
+           shadow=off
 
 ##### Changing Defaults #####
 # We now change some default values that are applied to all further items
@@ -74,31 +75,28 @@ for sid in {1..9}; do
     background.color=$WORKSPACE_INACTIVE_BG \
     background.border_width=0 \
     click_script="aerospace workspace $sid" \
-    script="$CONFIG_DIR/plugins/aerospace.sh $sid" \
     --subscribe space.$sid mouse.entered mouse.exited
 done
 
-# Dynamic workspace manager - handles showing/hiding workspaces
-sketchybar --add item workspace_manager left \
-  --set workspace_manager \
-  drawing=off \
-  script="$PLUGIN_DIR/dynamic_workspaces.sh" \
-  --subscribe workspace_manager aerospace_workspace_change
-
-# Front app display
+# Front app display (updated by consolidated script)
 sketchybar --add item front_app left \
            --set front_app \
            icon.drawing=on \
            background.padding_left=4 \
            background.padding_right=8 \
            label.color=$ORANGE \
-           label.font="JetBrainsMono Nerd Font:Medium:14.0" \
-           script="$PLUGIN_DIR/aerospace_front_app.sh" \
-           --subscribe front_app aerospace_workspace_change
+           label.font="JetBrainsMono Nerd Font:Medium:14.0"
+
+# Consolidated aerospace manager - handles workspaces and front app in single script
+sketchybar --add item aerospace_manager left \
+  --set aerospace_manager \
+  drawing=off \
+  script="$PLUGIN_DIR/aerospace_optimized.sh" \
+  --subscribe aerospace_manager aerospace_workspace_change mouse.entered mouse.exited
 
 ##### Adding Center Items #####
 sketchybar --add item clock center \
-           --set clock update_freq=1 \
+           --set clock update_freq=60 \
            icon="" \
            script="$PLUGIN_DIR/clock.sh" \
            click_script="open -a Calendar"
@@ -115,8 +113,7 @@ sketchybar --add item power right \
            --subscribe power mouse.entered mouse.exited
 
 sketchybar --add item battery_internal right \
-           --set battery_internal script="$PLUGIN_DIR/battery_internal.sh" \
-           update_freq=120 \
+           --set battery_internal \
            background.drawing=off \
            background.padding_left=8 \
            background.padding_right=8 \
@@ -124,44 +121,36 @@ sketchybar --add item battery_internal right \
            --subscribe battery_internal mouse.entered mouse.exited
 
 sketchybar --add item memory right \
-           --set memory update_freq=30 \
+           --set memory \
            icon="MEM" \
+           drawing=off \
            background.drawing=off \
            background.padding_left=8 \
            background.padding_right=8 \
-           script="$PLUGIN_DIR/memory.sh" \
            click_script="open -a 'Activity Monitor'" \
            --subscribe memory mouse.entered mouse.exited
 
 sketchybar --add item cpu right \
-           --set cpu update_freq=1 \
+           --set cpu \
            icon="CPU" \
+           drawing=off \
            background.drawing=off \
            background.padding_left=8 \
            background.padding_right=8 \
-           script="$PLUGIN_DIR/cpu.sh" \
            click_script="open -a 'Activity Monitor'" \
            --subscribe cpu mouse.entered mouse.exited
 
-sketchybar --add item brightness right \
-           --set brightness script="$PLUGIN_DIR/brightness.sh" \
-           background.drawing=off \
-           background.padding_left=8 \
-           background.padding_right=8 \
-           update_freq=1 \
-           --subscribe brightness mouse.entered mouse.exited
+# Consolidated system monitor - updates CPU, Memory, Battery efficiently
+sketchybar --add item system_monitor right \
+           --set system_monitor \
+           drawing=off \
+           update_freq=10 \
+           script="$PLUGIN_DIR/system_monitor_optimized.sh" \
+           --subscribe system_monitor system_woke
 
-sketchybar --add item volume right \
-           --set volume script="$PLUGIN_DIR/volume.sh" \
-           background.drawing=off \
-           background.padding_left=8 \
-           background.padding_right=8 \
-           click_script="open -a 'Audio MIDI Setup'" \
-           --subscribe volume volume_change \
-           --subscribe volume mouse.entered mouse.exited
 
 # Using a bracket for the right side for consistent rounding and background.
-sketchybar --add bracket right_bracket volume brightness cpu memory battery_internal power \
+sketchybar --add bracket right_bracket battery_internal power \
            --set right_bracket background.color=$ITEM_BG_COLOR \
            background.corner_radius=8 \
            background.height=30
