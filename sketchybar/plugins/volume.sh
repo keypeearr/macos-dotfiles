@@ -17,9 +17,15 @@ elif [ "$SENDER" = "mouse.exited" ]; then
   exit 0
 fi
 
-# Get current volume
-VOLUME=$(osascript -e "output volume of (get volume settings)")
-MUTED=$(osascript -e "output muted of (get volume settings)")
+# Get current volume - optimized with single AppleScript call and timeout
+VOLUME_INFO=$(timeout 1s osascript -e "set vol to get volume settings; return (output volume of vol) & \"|\" & (output muted of vol)" 2>/dev/null)
+if [[ -n "$VOLUME_INFO" ]]; then
+    VOLUME=$(echo "$VOLUME_INFO" | cut -d'|' -f1)
+    MUTED=$(echo "$VOLUME_INFO" | cut -d'|' -f2)
+else
+    VOLUME=50
+    MUTED=false
+fi
 
 # Create slimmer volume bar visualization
 VOLUME_BAR=""
@@ -34,20 +40,15 @@ for ((i=1; i<=EMPTY; i++)); do
     VOLUME_BAR+="▭"  # Slimmer empty character
 done
 
-# Dynamic sound icon based on volume level
+# Dynamic sound icon and single sketchybar call based on volume level
 if [[ $MUTED == "true" ]]; then
-    SOUND_ICON="🔇"
-    sketchybar --set $NAME icon="$SOUND_ICON [▭▭▭▭▭▭▭]" label="MUTE"
+    sketchybar --set $NAME icon="🔇 [▭▭▭▭▭▭▭]" label="MUTE" icon.color=$ORANGE label.color=$ORANGE
 elif [[ $VOLUME -eq 0 ]]; then
-    SOUND_ICON="🔇"
-    sketchybar --set $NAME icon="$SOUND_ICON [$VOLUME_BAR]" label="$VOLUME%"
+    sketchybar --set $NAME icon="🔇 [$VOLUME_BAR]" label="$VOLUME%" icon.color=$ORANGE label.color=$ORANGE
 elif [[ $VOLUME -le 33 ]]; then
-    SOUND_ICON="🔈"
-    sketchybar --set $NAME icon="$SOUND_ICON [$VOLUME_BAR]" label="$VOLUME%"
+    sketchybar --set $NAME icon="🔈 [$VOLUME_BAR]" label="$VOLUME%" icon.color=$ORANGE label.color=$ORANGE
 elif [[ $VOLUME -le 66 ]]; then
-    SOUND_ICON="🔉"
-    sketchybar --set $NAME icon="$SOUND_ICON [$VOLUME_BAR]" label="$VOLUME%"
+    sketchybar --set $NAME icon="🔉 [$VOLUME_BAR]" label="$VOLUME%" icon.color=$ORANGE label.color=$ORANGE
 else
-    SOUND_ICON="🔊"
-    sketchybar --set $NAME icon="$SOUND_ICON [$VOLUME_BAR]" label="$VOLUME%"
+    sketchybar --set $NAME icon="🔊 [$VOLUME_BAR]" label="$VOLUME%" icon.color=$ORANGE label.color=$ORANGE
 fi

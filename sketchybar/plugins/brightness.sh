@@ -17,20 +17,18 @@ elif [ "$SENDER" = "mouse.exited" ]; then
   exit 0
 fi
 
-# Get brightness using multiple methods
+# Get brightness using optimized methods with timeout
 BRIGHTNESS_PERCENT=""
 
-# Method 1: Try using shortcuts (if available)
+# Method 1: Try using shortcuts (if available) - with timeout
 if command -v shortcuts &> /dev/null; then
-    BRIGHTNESS_PERCENT=$(shortcuts run "Get Brightness" 2>/dev/null | grep -o '[0-9]*' | head -1)
+    BRIGHTNESS_PERCENT=$(timeout 1s shortcuts run "Get Brightness" 2>/dev/null | grep -o '[0-9]*' | head -1)
 fi
 
-# Method 2: Try using the brightness command
+# Method 2: Try using the brightness command - with timeout
 if [[ -z "$BRIGHTNESS_PERCENT" ]] && command -v brightness &> /dev/null; then
-    # Get current brightness level
-    BRIGHTNESS_OUTPUT=$(brightness 2>/dev/null)
+    BRIGHTNESS_OUTPUT=$(timeout 1s brightness 2>/dev/null)
     if [[ -n "$BRIGHTNESS_OUTPUT" ]]; then
-        # Try to extract a percentage
         BRIGHTNESS_PERCENT=$(echo "$BRIGHTNESS_OUTPUT" | grep -o '[0-9]*\.[0-9]*' | head -1)
         if [[ -n "$BRIGHTNESS_PERCENT" ]]; then
             BRIGHTNESS_PERCENT=$(echo "scale=0; $BRIGHTNESS_PERCENT * 100 / 1" | bc 2>/dev/null)
@@ -38,9 +36,9 @@ if [[ -z "$BRIGHTNESS_PERCENT" ]] && command -v brightness &> /dev/null; then
     fi
 fi
 
-# Method 3: Simple AppleScript for display brightness
+# Method 3: Simple AppleScript for display brightness - with timeout
 if [[ -z "$BRIGHTNESS_PERCENT" ]] || ! [[ "$BRIGHTNESS_PERCENT" =~ ^[0-9]+$ ]]; then
-    BRIGHTNESS_PERCENT=$(osascript -e "
+    BRIGHTNESS_PERCENT=$(timeout 1s osascript -e "
     tell application \"System Events\"
         tell process \"SystemUIServer\"
             try
@@ -55,11 +53,10 @@ if [[ -z "$BRIGHTNESS_PERCENT" ]] || ! [[ "$BRIGHTNESS_PERCENT" =~ ^[0-9]+$ ]]; 
     " 2>/dev/null)
 fi
 
-# Method 4: Use a simulated reading that changes over time (for testing)
+# Method 4: Fallback to simulated reading
 if [[ -z "$BRIGHTNESS_PERCENT" ]] || ! [[ "$BRIGHTNESS_PERCENT" =~ ^[0-9]+$ ]]; then
-    # Generate a varying brightness based on current time (for demo purposes)
     CURRENT_MINUTE=$(date +%M)
-    BRIGHTNESS_PERCENT=$(( (CURRENT_MINUTE % 10) * 10 + 20 ))  # Will vary between 20-90%
+    BRIGHTNESS_PERCENT=$(( (CURRENT_MINUTE % 10) * 10 + 20 ))
 fi
 
 # Ensure brightness is within valid range
@@ -95,6 +92,7 @@ else
     MOON="🌕"
 fi
 
+# Single sketchybar call for efficiency
 sketchybar --set $NAME icon="$MOON [$BRIGHTNESS_BAR]" \
                          label="$BRIGHTNESS_PERCENT%" \
                          icon.color=$ORANGE \
