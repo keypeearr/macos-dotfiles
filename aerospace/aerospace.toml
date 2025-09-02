@@ -19,11 +19,10 @@ after-startup-command = [
     'exec-and-forget /opt/homebrew/opt/borders/bin/borders active_color=0xffFF8C00 inactive_color=0x20494d64 width=4.0'
 ]
 
-# Notify SketchyBar on workspace change
+# Notify SketchyBar on workspace change - optimized for performance
 exec-on-workspace-change = [
-    '/bin/bash', 
-    '-c', 
-    'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE PREV_WORKSPACE=$AEROSPACE_PREV_WORKSPACE',
+    '/usr/bin/env', 'sh', '-c',
+    'sketchybar --trigger aerospace_workspace_change FOCUSED=$AEROSPACE_FOCUSED_WORKSPACE &'
 ]
 
 # Start AeroSpace at login
@@ -55,10 +54,7 @@ key-mapping.preset = 'qwerty'
 # See https://nikitabobko.github.io/AeroSpace/guide#on-focus-changed-callbacks
 # See https://nikitabobko.github.io/AeroSpace/commands#move-mouse
 on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
-on-focus-changed = [
-    'move-mouse window-lazy-center',
-    'exec-and-forget sketchybar --trigger aerospace_focus_change'
-]
+on-focus-changed = ['move-mouse window-lazy-center']
 
 # Gaps between windows (inner-*) and between monitor edges (outer-*).
 # Possible values:
