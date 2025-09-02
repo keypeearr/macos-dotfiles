@@ -17,6 +17,6 @@ elif [ "$SENDER" = "mouse.exited" ]; then
   exit 0
 fi
 
-# Launch power menu (equivalent to wlogout)
-# You can replace this with your preferred power menu
-osascript -e 'tell app "System Events" to log out'
+# Shutdown the system
+# This will properly shut down the Mac
+osascript -e 'tell app "System Events" to shut down'
