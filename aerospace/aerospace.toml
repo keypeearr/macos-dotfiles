@@ -22,7 +22,7 @@ after-startup-command = [
 # Notify SketchyBar on workspace change - optimized for performance
 exec-on-workspace-change = [
     '/usr/bin/env', 'sh', '-c',
-    'sketchybar --trigger aerospace_workspace_change FOCUSED=$AEROSPACE_FOCUSED_WORKSPACE &'
+    'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE &'
 ]
 
 # Start AeroSpace at login
